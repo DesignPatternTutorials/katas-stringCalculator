@@ -4,14 +4,6 @@ namespace StringCalculatorTests.CalculatorTests;
 
 public class CalculatorTest
 {
-    // public void Calculator_()
-    // {
-    //     // Arrange
-    //     // Act
-    //     // Assert
-    // }
-
-
     [Fact]
     public void Calculator_With_EmptyString_Ruturns_0()
     {
@@ -39,19 +31,46 @@ public class CalculatorTest
     }
 
     [Theory]
-    [InlineData("1,2", 3)]
-    [InlineData("1,1,1", 3)]
-    [InlineData("2,2,1", 5)]
-    public void Calculator_With_MultipleNumbers_Returns_Sum(string input, int sum)
+    [InlineData("1,2", 3, null)]
+    [InlineData("1,2", 3, "")]
+    [InlineData("1|1|1", 3, "|")]
+    [InlineData("2&2&1", 5, "&")]
+    public void Calculator_With_MultipleNumbers_Returns_Sum(string input, int sum, string delimeter)
     {
         // Arrange
         var sut = new StringCalculator();
 
         // Act
+        sut.Delimiter = delimeter;
         var result = sut.Add(input);
 
         // Assert
         Assert.Equal(sum, result);
+    }
+
+    [Fact]
+    public void Calculator_WithNoDelimeter_Should_Return_DefaultDelimeter()
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+
+        // Assert
+        Assert.Equal(",", sut.Delimiter);
+    }
+
+    [Fact]
+    public void Calculator_WithDelimeter_Should_Return_Delimeter()
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+        sut.Delimiter = "|";
+
+        // Assert
+        Assert.Equal("|", sut.Delimiter);
     }
 
 }
