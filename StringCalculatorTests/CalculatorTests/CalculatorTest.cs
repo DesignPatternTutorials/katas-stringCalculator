@@ -49,6 +49,21 @@ public class CalculatorTest
         Assert.Equal(sum, result);
     }
 
+    [Theory]
+    [InlineData("2£2$2", 6, "£,$")]
+    public void Calculator_With_MultipleNumbersAndDelimitiers_Returns_Sum(string input, int sum, string delimeters)
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+        sut.Delimiters = delimeters.Split(',');
+        var result = sut.Add(input);
+
+        // Assert
+        Assert.Equal(sum, result);
+    }
+
     [Fact]
     public void Calculator_WithNoDelimeter_Should_Return_DefaultDelimeter()
     {
