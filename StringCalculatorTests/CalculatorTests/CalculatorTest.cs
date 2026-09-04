@@ -35,6 +35,7 @@ public class CalculatorTest
     [InlineData("1,2", 3, "")]
     [InlineData("1|1|1", 3, "|")]
     [InlineData("2&2&1", 5, "&")]
+    [InlineData("2\n2\n1", 5, "\n")]
     public void Calculator_With_MultipleNumbers_Returns_Sum(string input, int sum, string delimeter)
     {
         // Arrange
