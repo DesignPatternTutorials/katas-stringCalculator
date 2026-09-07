@@ -1,20 +1,33 @@
+using System.Collections.ObjectModel;
 using System.Xml.Schema;
 
 namespace StringCalculatorApp;
 
 public class StringCalculator
 {
-    public string Delimiter
-    {
-        get => field;
-        set => field = string.IsNullOrEmpty(value) ? "," : value;
-    } = ",";
+    bool _customDelimiter = false;
+    public readonly string Delimiter = ",";
+    public List<string> Delimiters = [];
 
-    public IEnumerable<string> Delimiters
+    public void UseDelimiter(string delimeter)
     {
-        get => field;
-        set => field = value;
-    } = new List<string>();
+        if (string.IsNullOrEmpty(delimeter))
+        { throw new Exception("Invalid Delimiter!"); }
+
+        _customDelimiter = true;
+        Delimiters.Add(delimeter);
+    }
+
+    public void AddDelimiter(string delimeter)
+    {
+        UseDelimiter(delimeter);
+    }
+
+    public void ResetDelimiter()
+    {
+        _customDelimiter = false;
+        Delimiters = [];
+    }
 
     /// <summary>
     /// Very simple calculater, sum all numbers in a string.
@@ -26,9 +39,9 @@ public class StringCalculator
         if (string.IsNullOrEmpty(value))
         { return 0; }
 
-        var numbers = Delimiters.Any()
-            ? value.Split(Delimiters.ToArray(), StringSplitOptions.None)
-            : value.Split(Delimiter, StringSplitOptions.None);
+        var numbers = _customDelimiter
+                        ? value.Split(Delimiters.ToArray(), StringSplitOptions.None)
+                        : value.Split(Delimiter, StringSplitOptions.None);
 
         var sum = numbers.Sum(m => int.Parse(m));
 

@@ -31,8 +31,22 @@ public class CalculatorTest
     }
 
     [Theory]
-    [InlineData("1,2", 3, null)]
-    [InlineData("1,2", 3, "")]
+    [InlineData(null)]
+    [InlineData("")]
+    public void Calculator_With_InvalidDelmitier_Returns_Exception(string delimeter)
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+        var action = () => sut.UseDelimiter(delimeter);
+
+        // Assert
+        var exception = Assert.Throws<Exception>(action);
+        Assert.Equal("Invalid Delimiter!", exception.Message);
+    }
+
+    [Theory]
     [InlineData("1|1|1", 3, "|")]
     [InlineData("2&2&1", 5, "&")]
     [InlineData("2\n2\n1", 5, "\n")]
@@ -42,7 +56,7 @@ public class CalculatorTest
         var sut = new StringCalculator();
 
         // Act
-        sut.Delimiter = delimeter;
+        sut.UseDelimiter(delimeter);
         var result = sut.Add(input);
 
         // Assert
@@ -57,7 +71,11 @@ public class CalculatorTest
         var sut = new StringCalculator();
 
         // Act
-        sut.Delimiters = delimeters.Split(',');
+        foreach (var delimeter in delimeters)
+        {
+            sut.AddDelimiter(delimeter.ToString());
+        }
+
         var result = sut.Add(input);
 
         // Assert
@@ -83,10 +101,10 @@ public class CalculatorTest
         var sut = new StringCalculator();
 
         // Act
-        sut.Delimiter = "|";
+        sut.UseDelimiter("|");
 
         // Assert
-        Assert.Equal("|", sut.Delimiter);
+        Assert.Equal("|", sut.Delimiters.First());
     }
 
 }
