@@ -11,16 +11,17 @@ public class StringCalculator
 
     public void UseDelimiter(string delimeter)
     {
+        Delimiters = [];
+        AddDelimiter(delimeter);
+    }
+
+    public void AddDelimiter(string delimeter)
+    {
         if (string.IsNullOrEmpty(delimeter))
         { throw new Exception("Invalid Delimiter!"); }
 
         _customDelimiter = true;
         Delimiters.Add(delimeter);
-    }
-
-    public void AddDelimiter(string delimeter)
-    {
-        UseDelimiter(delimeter);
     }
 
     public void ResetDelimiter()
@@ -43,8 +44,6 @@ public class StringCalculator
                         ? value.Split(Delimiters.ToArray(), StringSplitOptions.None)
                         : value.Split(Delimiter, StringSplitOptions.None);
 
-        var sum = numbers.Sum(m => int.Parse(m));
-
-        return sum;
+        return numbers.Sum(m => int.Parse(m));
     }
 }
