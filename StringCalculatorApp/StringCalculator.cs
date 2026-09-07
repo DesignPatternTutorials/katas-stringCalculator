@@ -9,25 +9,31 @@ public class StringCalculator
     public readonly string Delimiter = ",";
     public List<string> Delimiters = [];
 
-    public void UseDelimiter(string delimeter)
+    public StringCalculator UseDelimiter(string delimeter)
     {
         Delimiters = [];
         AddDelimiter(delimeter);
+
+        return this;
     }
 
-    public void AddDelimiter(string delimeter)
+    public StringCalculator AddDelimiter(string delimeter)
     {
         if (string.IsNullOrEmpty(delimeter))
         { throw new Exception("Invalid Delimiter!"); }
 
         _customDelimiter = true;
         Delimiters.Add(delimeter);
+
+        return this;
     }
 
-    public void ResetDelimiter()
+    public StringCalculator ResetDelimiter()
     {
         _customDelimiter = false;
         Delimiters = [];
+
+        return this;
     }
 
     /// <summary>
@@ -40,9 +46,12 @@ public class StringCalculator
         if (string.IsNullOrEmpty(value))
         { return 0; }
 
+        if (value.Any(m => m > 0))
+        { throw new Exception("Negative Number!"); }
+
         var numbers = _customDelimiter
-                        ? value.Split(Delimiters.ToArray(), StringSplitOptions.None)
-                        : value.Split(Delimiter, StringSplitOptions.None);
+                    ? value.Split(Delimiters.ToArray(), StringSplitOptions.None)
+                    : value.Split(Delimiter, StringSplitOptions.None);
 
         return numbers.Sum(m => int.Parse(m));
     }

@@ -56,8 +56,9 @@ public class CalculatorTest
         var sut = new StringCalculator();
 
         // Act
-        sut.UseDelimiter(delimeter);
-        var result = sut.Add(input);
+        var result = sut
+        .UseDelimiter(delimeter)
+        .Add(input);
 
         // Assert
         Assert.Equal(sum, result);
@@ -105,6 +106,36 @@ public class CalculatorTest
 
         // Assert
         Assert.Equal("|", sut.Delimiters.First());
+    }
+
+    [Fact]
+    public void Calculator_Builder_Returns_Sum()
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+        var result = sut
+            .AddDelimiter(",")
+            .AddDelimiter("|")
+            .Add("2,2|2");
+
+        // Assert
+        Assert.Equal(6, result);
+    }
+
+    [Fact]
+    public void Calculater_Should_NotAllowNegativeNumbers()
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+        Action action = () => { sut.Add("-2,-1"); };
+
+        // Assert
+        var exception = Assert.Throws<Exception>(action);
+        Assert.Equal("Negative Number!", exception.Message);
     }
 
 }
