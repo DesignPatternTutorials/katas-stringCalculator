@@ -125,7 +125,7 @@ public class CalculatorTest
     }
 
     [Fact]
-    public void Calculater_Should_NotAllowNegativeNumbers()
+    public void Calculater_Should_NotAllowNegativeNumbers_Throws_Exception()
     {
         // Arrange
         var sut = new StringCalculator();
@@ -135,7 +135,21 @@ public class CalculatorTest
 
         // Assert
         var exception = Assert.Throws<Exception>(action);
-        Assert.Equal("Negative Number!", exception.Message);
+        Assert.Equal("Negative numbers are not allowed!", exception.Message);
+    }
+
+    [Fact]
+    public void Calculater_Should_NotAllowTextValues_Throws_Exception()
+    {
+        // Arrange
+        var sut = new StringCalculator();
+
+        // Act
+        Action action = () => { sut.Add("2,x"); };
+
+        // Assert
+        var exception = Assert.Throws<Exception>(action);
+        Assert.Equal("x is not a valid number!", exception.Message);
     }
 
 }
