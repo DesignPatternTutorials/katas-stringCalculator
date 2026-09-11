@@ -1,101 +1,101 @@
+using System.Text.RegularExpressions;
+
 namespace StringCalculatorApp;
 
 /// <summary>
 /// A simple calculator that parses a delimited string of numbers and returns their sum.
-/// Supports configurable delimiters and throws on invalid or negative input.
+/// Supports the default comma/newline separators as well as custom separators declared
+/// inline in the input string (e.g. "//;\n1;2"), and throws on negative input.
 /// </summary>
 public class StringCalculator
 {
-    bool _customDelimiter = false;
+    private const string DefaultDelimiterPattern = "[,\n]";
 
     /// <summary>
-    /// The default delimiter used to split numbers when no custom delimiter has been set.
-    /// </summary>
-    public readonly string Delimiter = ",";
-
-    /// <summary>
-    /// The list of custom delimiters currently in use, when <see cref="_customDelimiter"/> is true.
-    /// </summary>
-    public List<string> Delimiters = [];
-
-    /// <summary>
-    /// Replaces any existing custom delimiters with a single new delimiter.
-    /// </summary>
-    /// <param name="delimeter">The delimiter to use for splitting input strings.</param>
-    /// <returns>The current <see cref="StringCalculator"/> instance, for chaining.</returns>
-    public StringCalculator UseDelimiter(string delimeter)
-    {
-        Delimiters = [];
-        AddDelimiter(delimeter);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Adds an additional custom delimiter to the list of delimiters used for splitting input strings.
-    /// </summary>
-    /// <param name="delimeter">The delimiter to add. Cannot be null or empty.</param>
-    /// <returns>The current <see cref="StringCalculator"/> instance, for chaining.</returns>
-    /// <exception cref="Exception">Thrown when <paramref name="delimeter"/> is null or empty.</exception>
-    public StringCalculator AddDelimiter(string delimeter)
-    {
-        if (string.IsNullOrEmpty(delimeter))
-        { throw new Exception("Invalid Delimiter!"); }
-
-        _customDelimiter = true;
-        Delimiters.Add(delimeter);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Clears any custom delimiters and reverts to using the default <see cref="Delimiter"/>.
-    /// </summary>
-    /// <returns>The current <see cref="StringCalculator"/> instance, for chaining.</returns>
-    public StringCalculator ResetDelimiter()
-    {
-        _customDelimiter = false;
-        Delimiters = [];
-
-        return this;
-    }
-
-    /// <summary>
-    /// Very simple calculator, sum all numbers in a string.
+    /// Very simple calculator: sums all numbers in a delimited string.
     /// </summary>
     /// <param name="value">
-    /// A delimited string of numbers. Returns 0 if null or empty.
+    /// A delimited string of numbers, optionally prefixed with a custom delimiter
+    /// declaration in the form "//[delimiter]\n..." (or "//[d1][d2]...\n..." for
+    /// multiple delimiters). Returns 0 if null or empty.
     /// </param>
     /// <returns>The sum of all parsed numbers.</returns>
-    /// <exception cref="Exception">
-    /// Thrown when any entry in <paramref name="value"/> cannot be parsed as an integer,
-    /// or when any parsed number is negative.
+    /// <exception cref="FormatException">
+    /// Thrown when any entry cannot be parsed as an integer.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when one or more parsed numbers are negative. The message lists every
+    /// negative number found, comma-separated.
     /// </exception>
     public int Add(string value)
     {
         if (string.IsNullOrEmpty(value))
-        { return 0; }
+        {
+            return 0;
+        }
 
-        var numbersAsString = _customDelimiter
-                    ? value.Split(Delimiters.ToArray(), StringSplitOptions.None)
-                    : value.Split(Delimiter, StringSplitOptions.None);
+        var (delimiterPattern, numbersSection) = ExtractDelimiters(value);
 
+        var numbersAsString = Regex.Split(numbersSection, delimiterPattern);
 
         var numbers = numbersAsString
+            .Where(m => !string.IsNullOrEmpty(m))
             .Select(m =>
             {
                 if (int.TryParse(m, out int result))
-                { return result; }
+                {
+                    return result;
+                }
 
-                throw new Exception($"{m} is not a valid number!");
-            }).ToList();
+                throw new FormatException($"'{m}' is not a valid number!");
+            })
+            .ToList();
 
-
-        if (numbers.Any(m => m < 0))
+        var negatives = numbers.Where(n => n < 0).ToList();
+        if (negatives.Count > 0)
         {
-            throw new Exception("Negative numbers are not allowed!");
+            throw new ArgumentException(
+                $"Negatives not allowed: {string.Join(", ", negatives)}");
         }
 
-        return numbers.Sum(m => m);
+        return numbers.Sum();
+    }
+
+    /// <summary>
+    /// Checks the input for a "//[delimiter(s)]\n" header. If present, builds a regex
+    /// pattern matching any of the declared delimiters (escaped, so special regex
+    /// characters in a custom delimiter are treated literally) and returns the
+    /// remaining numbers section. If absent, returns the default comma/newline pattern
+    /// and the original string unchanged.
+    /// </summary>
+    private static (string pattern, string numbersSection) ExtractDelimiters(string value)
+    {
+        if (!value.StartsWith("//"))
+        {
+            return (DefaultDelimiterPattern, value);
+        }
+
+        var newlineIndex = value.IndexOf('\n');
+        if (newlineIndex == -1)
+        {
+            // Malformed header with no terminating newline — treat the whole thing
+            // as numbers using the default delimiters rather than guessing.
+            return (DefaultDelimiterPattern, value);
+        }
+
+        var header = value[2..newlineIndex];
+        var numbersSection = value[(newlineIndex + 1)..];
+
+        // Bracketed form supports multiple and/or multi-character delimiters:
+        // "//[*][%%]\n..." -> delimiters "*" and "%%"
+        var bracketMatches = Regex.Matches(header, @"\[(.*?)\]");
+
+        var delimiters = bracketMatches.Count > 0
+            ? bracketMatches.Select(m => m.Groups[1].Value).ToList()
+            : [header]; // Simple form: "//;\n..." -> single delimiter ";"
+
+        var pattern = string.Join("|", delimiters.Select(Regex.Escape));
+
+        return (pattern, numbersSection);
     }
 }
